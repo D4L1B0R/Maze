@@ -32,7 +32,7 @@ The maze is divided into sectors, with a procedural generation algorithm that en
 
 ### 🛠 Technologies Used
 
-- **C++17** (or newer)  
+- **C++14**
 - Standard Template Library (STL)  
 - Smart pointers (`std::unique_ptr`)  
 - Custom hashing for coordinate pairs  
