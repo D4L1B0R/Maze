@@ -1,0 +1,9 @@
+﻿  Dynamic.cpp
+C:\Users\dalen\source\repos\Projektni zadatak\Dynamic.cpp(79,35): error C2676: binary '[': 'Maze' does not define this operator or a conversion to a type acceptable to the predefined operator
+  Maze.cpp
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(427,63): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(427,63): warning C4267:         with
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(427,63): warning C4267:         [
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(427,63): warning C4267:             _Ty=int
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(427,63): warning C4267:         ]
+  Generating Code...
