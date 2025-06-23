@@ -1,39 +1,45 @@
+ï»¿// Project: Maze Problem solving in c++
+// Name of an author: NikoliÄ‡ Dalibor SV13-2023
+// Date and time of the last changes: 23.06.2025. 18:47
+
+// HEADER FOR THE GAME LEGEND AND MORE DATA ABOUT MAGIC OBJECTS (POWER-UPS IN THE GAME)
+
 #ifndef DISPLAY_HEADER
 #define DISPLAY_HEADER
 
 #include <iostream>
 
 void printGameLegend() {
-    std::cout << "\n==================[ GAME LEGEND – PRESS 'N' TO VIEW MAP ]===================\n\n";
+    std::cout << "\n==================[ GAME LEGEND â€“ PRESS 'N' TO VIEW MAP ]===================\n\n";
 
-    std::cout << "**R – THE CLOCKWORK ROBOT ROBERT: THE EXPLORER OF UNKNOWN**\n";
-    std::cout << "A lone automaton cast into the Maze’s depths.\n";
+    std::cout << "**R â€“ THE CLOCKWORK ROBOT ROBERT: THE EXPLORER OF UNKNOWN**\n";
+    std::cout << "A lone automaton cast into the Mazeâ€™s depths.\n";
     std::cout << "Moves one step at a time, leaving a faint trail of light (.) behind.\n";
     std::cout << "Your goal: guide R to freedom without falling prey to the Minotaur.\n\n";
 
-    std::cout << "**M – THE MINOTAUR OF THE LABYRINTH**\n";
+    std::cout << "**M â€“ THE MINOTAUR OF THE LABYRINTH**\n";
     std::cout << "A relentless hunter, stalking one square per turn.\n";
     std::cout << "Can trample and destroy any Power-Up (P) it crosses.\n";
-    std::cout << "If it reaches R, the game is over—unless R wields a power worthy of legend.\n\n";
+    std::cout << "If it reaches R, the game is overâ€”unless R wields a power worthy of legend.\n\n";
 
-    std::cout << "**# – ANCIENT STONE WALLS**\n";
+    std::cout << "**# â€“ ANCIENT STONE WALLS**\n";
     std::cout << "Impassable barriers forged eons ago.\n";
-    std::cout << "Some may be shattered by the Hammer of Earth’s Wrath, if you dare use it.\n\n";
+    std::cout << "Some may be shattered by the Hammer of Earthâ€™s Wrath, if you dare use it.\n\n";
 
-    std::cout << "**. – LIGHT TRAIL**\n";
-    std::cout << "Both R and M leave a single dot behind as they move—\n";
+    std::cout << "**. â€“ LIGHT TRAIL**\n";
+    std::cout << "Both R and M leave a single dot behind as they moveâ€”\n";
     std::cout << "marking their path through the twisting corridors.\n\n";
 
-    std::cout << "**U – THE ENCHANTED ENTRANCE**\n";
-    std::cout << "The only way in; once you pass through, the Maze’s magic binds you inside.\n\n";
+    std::cout << "**U â€“ THE ENCHANTED ENTRANCE**\n";
+    std::cout << "The only way in; once you pass through, the Mazeâ€™s magic binds you inside.\n\n";
 
-    std::cout << "**I – THE FLICKERING EXIT**\n";
+    std::cout << "**I â€“ THE FLICKERING EXIT**\n";
     std::cout << "Your one hope of escape. Find it before the Minotaur finds you.\n\n";
 
-    std::cout << "**P – ANCIENT POWER-UPS**\n";
+    std::cout << "**P â€“ ANCIENT POWER-UPS**\n";
     std::cout << "Relics scattered in hidden alcoves.\n";
     std::cout << "R may collect and activate them ('+P') to turn the tides of battle.\n";
-    std::cout << "But beware—M will crush them if it crosses their path.\n\n";
+    std::cout << "But bewareâ€”M will crush them if it crosses their path.\n\n";
 
     std::cout << "=============================================================================\n\n";
 }
@@ -47,7 +53,7 @@ void revealAllPowerUps() {
 
     std::cout << "**ANGELIC SHIELD OF AEONS**\n";
     std::cout << "Forged by forgotten sentinels, this shield grants you a second chance.\n";
-    std::cout << "When the Minotaur attacks, the shield absorbs the fatal blow — but only once.\n\n";
+    std::cout << "When the Minotaur attacks, the shield absorbs the fatal blow â€” but only once.\n\n";
 
     std::cout << "**HAMMER OF EARTH'S WRATH**\n";
     std::cout << "A mighty relic capable of smashing through walls.\n";

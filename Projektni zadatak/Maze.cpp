@@ -1,8 +1,27 @@
-﻿#include "Maze.hpp"
+﻿// Project: Maze Problem solving in c++
+// Name of an author: Nikolić Dalibor SV13-2023
+// Date and time of the last changes: 23.06.2025. 18:47
+
+// *** Resolving all the functions that are in charge of generating the maze, connecting sectors and monitoring the process ***
+
+/*  The idea of finding the way out of the maze is to follow safe path to it's exit point
+    but in first place we need to generate that maze, to do that, we will seperate it into sectors with the same dimensions
+    inside each sector the path is drown, that leads from one point to another on the border of it
+    beginning with sector bellow the entrance point 'U' where it's exit will also be the entrance of the next sector
+    following the idea, we get, using 3 lvl. fallback system:
+                                                            -> ** 1st lvl. ** sectors begin to colide, changing the direction, rising the bias
+                                                            -> ** 2nd lvl. ** sectors more and more colide, removing last few sectors, rising bias even more
+                                                                (NOTE: Through the time risises the danger and number sectors to remove)
+                                                            -> ** 3rd lvl. ** final resolution, deleting the whole path and starting from beginning
+    
+    then connect them until we reach the sector till the ending, then priority is to connect current position to the exit point*/
+
+
 #include <queue>
 #include <algorithm>
 #include <random>
-#include <chrono>
+#include <chrono> // --> using it for getting maze generation time
+#include "Maze.hpp"
 #include "Fog.hpp"
 #include "Sword.hpp"
 #include "Shield.hpp"
@@ -23,9 +42,11 @@ Maze::Maze(int row, int col, int obj) : row(row), col(col), obj(obj) {
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
+    // Initializing starting and ending point
     maze[entrance] = std::make_unique<Type>('U');
     maze[exit] = std::make_unique<Type>('I');
 
+    // Calling the functions that operate with genrating the maze
     generateMaze();
     extractShortestPath();
     placeObjects();
@@ -34,12 +55,14 @@ Maze::Maze(int row, int col, int obj) : row(row), col(col), obj(obj) {
     robotPos = getEntranceBelow();
     minotaurPos = getRandomMinotaurStart();
 
+    // For the start we put label 'safe path' on characters starting points
     maze[robotPos] = std::make_unique<Type>('.');
     maze[minotaurPos] = std::make_unique<Type>('.');
 
     safePath.insert(robotPos);
     safePath.insert(minotaurPos);
 
+    // Time needed for generating the maze
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = endTime - startTime;
     std::cout << "Maze generated in " << duration.count() << " seconds.\n";
@@ -51,10 +74,11 @@ void Maze::generateMaze() {
     safePath.insert(entrance);
     maze[entrance] = std::make_unique<Type>('U');
 
-    int fallbackLevel = 0;
-    int fallbackAttempts = 0;
+    int fallbackLevel = 0;  // --> level of fallback system
+    int fallbackAttempts = 0;   // --> number of failed attempts
     std::vector<Coord> sectorCheckpoints = { current };
 
+    // Process of connecting sectors inside the maze
     while (!closeEnough(current, exit)) {
         Direction dir = getBiasedDirection(current, exit, fallbackLevel);
         Sector sector(current, dir, row, col);
@@ -63,6 +87,7 @@ void Maze::generateMaze() {
         Coord next = sector.getExit();
         bool validSector = (next != current) && !sector.path.empty();
 
+        // Sector is valid, there are no issues, no colisions
         if (validSector) {
             for (const auto& coord : sector.path) {
                 if (inBounds(coord)) {
@@ -89,6 +114,7 @@ void Maze::generateMaze() {
             fallbackAttempts = 0;
             fallbackLevel = std::max(0, fallbackLevel - 1);
         }
+        // Falling into colision, raising the fallbackAttempts number
         else {
             fallbackAttempts++;
             if (fallbackAttempts >= 3 && fallbackLevel == 0) fallbackLevel = 1;
@@ -119,6 +145,7 @@ void Maze::generateMaze() {
         }
     }
 
+    // Point of connecting neighbouring sectors
     Coord iConnect = { exit.first - 1, exit.second };
     Coord finalize = current;
 
@@ -142,6 +169,7 @@ void Maze::generateMaze() {
     safePath.insert(exit);
 }
 
+// Finding the shortest path through the maze, using the bfs
 void Maze::extractShortestPath() {
     finalPath.clear();
     std::unordered_map<Coord, Coord> parent;
@@ -178,16 +206,14 @@ void Maze::extractShortestPath() {
     }
 }
 
+// Putting the magic objects inside the maze
 void Maze::placeObjects() {
     std::vector<Coord> pathTiles(safePath.begin(), safePath.end());
     std::shuffle(pathTiles.begin(), pathTiles.end(), std::mt19937(std::random_device{}()));
 
     std::vector<char> allTypes;
-
-    // Dodaj samo jedan Sword
     allTypes.push_back('S');
 
-    // Ostatak ravnomerno između F, H, B
     std::vector<char> otherTypes = { 'F', 'H', 'B' };
     int remaining = obj - 1;
 
@@ -216,6 +242,7 @@ void Maze::placeObjects() {
     }
 }
 
+// Putting the interiour walls in the maze
 void Maze::placeInternalWalls() {
     double wallRatio = 0.45;
     int numWalls = static_cast<int>(row * col * wallRatio);
@@ -231,6 +258,7 @@ void Maze::placeInternalWalls() {
     }
 }
 
+// Bias function - starts from equal chances for each direction (25%)
 Direction Maze::getBiasedDirection(Coord current, Coord target, int fallbackLevel) {
     int dx = target.second - current.second;
     int dy = target.first - current.first;
@@ -260,46 +288,49 @@ Direction Maze::getBiasedDirection(Coord current, Coord target, int fallbackLeve
     return DOWN;
 }
 
+// Figuring out if two coordinates arre close to each other
 bool Maze::closeEnough(Coord a, Coord b) {
     return std::abs(a.first - b.first) + std::abs(a.second - b.second) <= 6;
 }
 
 void Maze::printMaze() {
-
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
             Coord c = { i, j };
-            bool isVisible = !fogActive || std::abs(robotPos.first - i) <= 2 && std::abs(robotPos.second - j) <= 2;
+            if (!gameOver) {
+                // Fog is active - field of view is reduced, so only characters near Robot are showing on the screen
+                bool isVisible = !getFogActive() || std::abs(robotPos.first - i) <= 3 && std::abs(robotPos.second - j) <= 3;
 
-            if (!isVisible) {
-                std::cout << " ";
-                continue;
+                if (!isVisible) {
+                    std::cout << " ";
+                    continue;
+                }
             }
 
             if (c == robotPos) {
-                std::cout << "\033[34mR\033[0m";
+                std::cout << "\033[34mR\033[0m";    // --> Robot Robert (blue 'R')
             }
             else if (c == minotaurPos) {
                 if (minotaurStunTimer > 0)
-                    std::cout << "\033[90mM\033[0m"; // sivi M ako je stunovan
+                    std::cout << "\033[90mM\033[0m";    // --> Minotaur in cooldown state (gray 'M')
                 else
-                    std::cout << "\033[31mM\033[0m"; // crveni M ako je aktivan
+                    std::cout << "\033[31mM\033[0m";    // --> Minotaur (red 'M')
             }
             else if (maze[c]->getChar() == 'P') {
                 char code = getPowerTypeAt(c, powerUpTypes);
-                if (code == 'F') std::cout << "\033[90mP\033[0m";
-                else if (code == 'S') std::cout << "\033[31mP\033[0m";
-                else if (code == 'H') std::cout << "\033[34mP\033[0m";
-                else if (code == 'B') std::cout << "\033[33mP\033[0m";
+                if (code == 'F') std::cout << "\033[90mP\033[0m";   // --> Fog (gray 'P')
+                else if (code == 'S') std::cout << "\033[31mP\033[0m";  // --> Sword (red 'P')
+                else if (code == 'H') std::cout << "\033[34mP\033[0m";  // --> Shield (blue 'P')
+                else if (code == 'B') std::cout << "\033[33mP\033[0m";  // --> Hammer (yellow 'P')
                 else std::cout << "P";
             }
             else if (showPath && isInFinalPath(c)) {
                 if (c == robotPos) std::cout << "\033[36mR\033[0m";
                 else if (c == minotaurPos) std::cout << "\033[35mM\033[0m";
                 else if (maze[c]->getChar() == 'U' || maze[c]->getChar() == 'I') std::cout << maze[c]->getChar();
-                else std::cout << "\033[33m*\033[0m";
+                else std::cout << "\033[33m*\033[0m";   // --> Safe path (yellow '*')
             }
-            else if (activeEffect == 'F' && std::abs(robotPos.first - i) + std::abs(robotPos.second - j) > 3) {
+            else if (getFogActive() && std::abs(robotPos.first - i) + std::abs(robotPos.second - j) > 3) {
                 std::cout << " ";
             }
             else {
@@ -309,18 +340,22 @@ void Maze::printMaze() {
         std::cout << '\n';
     }
 
+    // Ending writing based on the outcome
     if (gameOver && !gameWon) std::cout << "\n\033[31mYou were caught by the Minotaur!\033[0m\n";
     else if (gameWon) std::cout << "\n\033[32mYou escaped the maze!\033[0m\n";
 }
 
+// Determine if the two positions are in the same sector
 bool Maze::inSameSector(Coord a, Coord b) {
-    return std::abs(a.first - b.first) <= 2 && std::abs(a.second - b.second) <= 2;
+    return std::abs(a.first - b.first) <= 5 && std::abs(a.second - b.second) <= 5;
 }
 
+//  Checking if currecnt position is in the final path
 bool Maze::isInFinalPath(Coord c) const {
     return std::find(finalPath.begin(), finalPath.end(), c) != finalPath.end();
 }
 
+// Informing about the usage of the special effects
 void Maze::applyEffect(char effect) {
     switch (effect) {
     case 'F':
@@ -354,6 +389,7 @@ char Maze::getCharAt(Coord pos) const {
     return '#';
 }
 
+// Checking if the next position is valid (inside the maze, not the wall or stunned Minotaur)
 bool Maze::isWalkable(Coord pos) const {
     if (!inBounds(pos)) return false;
     if (pos == minotaurPos) return false;
@@ -372,33 +408,35 @@ void Maze::breakWallAt(Coord pos) {
     }
 }
 
+// Based on the state of Minotaur, we get him positioned
 void Maze::setMinotaurPos(Coord newPos) {
-    if (minotaurPos != Coord{ -1, -1 } && inBounds(minotaurPos)) {
-        // Očisti staru poziciju samo ako igra nije gotova
-        if (!gameOver)
+    if (minotaurAlive) {
+        if (inBounds(minotaurPos)) {
             maze[minotaurPos] = std::make_unique<Type>('.');
+        }
+        if (inBounds(newPos) && maze[newPos]->getChar() != '#') {
+            minotaurPos = newPos;
+
+            if (!gameOver && newPos != Coord {-1, -1}) {
+                maze[minotaurPos] = std::make_unique<Type>('M');
+            }
+        }
     }
 
-    if (inBounds(newPos) && maze[newPos]->getChar() != '#') {
-        minotaurPos = newPos;
-
-        // Ako nije kraj igre, postavi ga u lavirint
-        if (!gameOver)
-            maze[minotaurPos] = std::make_unique<Type>('M');
+    else {
+        maze[minotaurPos] = std::make_unique<Type>('.');
+        minotaurPos = Coord { -1,-1 };
     }
 }
 
+// Randomized Minotaur's starting point
 Coord Maze::getRandomMinotaurStart() {
     std::vector<Coord> candidates;
 
     for (const auto& pos : safePath) {
-        // Ne sme da bude preblizu robota ili ulaza
         int distRobot = abs(pos.first - robotPos.first) + abs(pos.second - robotPos.second);
-        if (distRobot >= 5) { // udaljenost bar 5
-
-            // Izbegavamo da minotaur bude odmah pored izlaza ili ulaza
+        if (distRobot >= 5) {
             if (!isAdjacentUpDownLeftRight(pos, entrance) && !isAdjacentUpDownLeftRight(pos, exit)) {
-                // Polje mora biti prohodno
                 if (maze[pos]->getChar() == '.') {
                     candidates.push_back(pos);
                 }
@@ -407,7 +445,6 @@ Coord Maze::getRandomMinotaurStart() {
     }
 
     if (candidates.empty()) {
-        // fallback: bilo koje prohodno polje van ivica
         for (int i = 1; i < row - 1; ++i) {
             for (int j = 1; j < col - 1; ++j) {
                 Coord c = { i, j };
@@ -426,25 +463,24 @@ Coord Maze::getRandomMinotaurStart() {
     std::mt19937 gen(std::random_device{}());
     std::uniform_int_distribution<> dist(0, candidates.size() - 1);
     Coord chosen = candidates[dist(gen)];
-    std::cout << "Minotaur start position: (" << chosen.first << ", " << chosen.second << ")\n"; // DEBUG
     return chosen;
 }
 
+// Checking if two positions are one block away from each other
 bool Maze::isAdjacentUpDownLeftRight(Coord a, Coord b) {
     return ((a.first == b.first && abs(a.second - b.second) == 1) ||
-        (a.second == b.second && abs(a.first - b.first) == 1));
+        (a.second == b.second && abs(a.first - b.first) == 1)) || (a == b);
 }
 
-void Maze::decrementHammerUses() {
-    if (hammerUsesLeft > 0) hammerUsesLeft--;
-    if (hammerUsesLeft == 0) {
-        std::cout << "Hammer has been fully used up.\n";
-        setHammer(false);
-    }
-}
-
+// ON and OFF highlighted path
 void Maze::toggleHighlightPath() {
     showPath = !showPath;
     std::cout << "\nHighlight path is now " << (showPath ? "ON" : "OFF") << "\n";
     std::cout << "finalPath size: " << finalPath.size() << "\n";
+}
+
+// Finding out the type of the magic object
+char Maze::getEffectAt(Coord pos) const {
+    auto it = powerUpTypes.find(pos);
+    return (it != powerUpTypes.end()) ? it->second : ' ';
 }

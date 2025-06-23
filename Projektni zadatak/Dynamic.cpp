@@ -1,10 +1,16 @@
-﻿#include <random>
-#include "Dynamic.hpp"
-#include "Maze.hpp"
+﻿// Project: Maze Problem solving in c++
+// Name of an author: Nikolić Dalibor SV13-2023
+// Date and time of the last changes: 23.06.2025. 18:47
+
+// *** Resolving all the functions that are in charge of navigating and moving throughout the game ***
+
+#include <random>
 #include <iostream>
 #include <set>
 #include <queue>
 #include <conio.h> // For _getch on Windows. Replace or abstract for portability.
+#include "Dynamic.hpp"
+#include "Maze.hpp"
 
 int randomNumberGenerator(int start, int end) {
     std::random_device rd;  // Seed for the random number engine
@@ -20,31 +26,6 @@ bool highlightPath = false;
 
 bool sameSector(Coord a, Coord b, int sectorSize) {
     return (abs(a.first - b.first) < sectorSize && abs(a.second - b.second) < sectorSize);
-}
-
-Coord bfsTowards(Coord start, Coord goal, Maze& maze) {
-    std::queue<std::pair<Coord, Coord>> q;
-    std::set<Coord> visited;
-    q.push({ start, start });
-    visited.insert(start);
-
-    std::vector<Coord> directions = { {1,0}, {-1,0}, {0,1}, {0,-1} };
-
-    while (!q.empty()) {
-        auto front = q.front(); q.pop();
-        Coord from = front.first;
-        Coord curr = front.second;
-        if (curr == goal) return from;
-
-        for (const auto& d : directions) {
-            Coord next = { curr.first + d.first, curr.second + d.second };
-            if (maze.isWalkable(next) && !visited.count(next)) {
-                q.push({ (from == start) ? next : from, next });
-                visited.insert(next);
-            }
-        }
-    }
-    return start;
 }
 
 void printGame(Maze& maze) {
@@ -85,8 +66,7 @@ void moveMinotaur(Maze& maze) {
         return;
     }
 
-    if (minotaurPos == Coord{ -1, -1 }) {
-        // Minotaur == DEAD ;(
+    if (!maze.getMinotaurAlive()) {
         return;
     }
 
@@ -99,6 +79,7 @@ void moveMinotaur(Maze& maze) {
 
     Coord robotPos = maze.getRobotPos();
 
+    // Minotaur's randomized movement if it's to far away from Robot
     if (!maze.inSameSector(robotPos, minotaurPos)) {
         std::vector<Coord> directions = { {-1,0}, {1,0}, {0,-1}, {0,1} };
         std::shuffle(directions.begin(), directions.end(), std::mt19937(std::random_device{}()));
@@ -111,6 +92,11 @@ void moveMinotaur(Maze& maze) {
         }
         return;
     }
+    // Not enabling the Minotaur to move if Robot have shield, he gets stunned
+    else if (maze.isAdjacentUpDownLeftRight(minotaurPos, robotPos) && maze.getShieldTimer() > 0) {
+        return;
+    }
+    // If Minotaur and Robot are in the same sector, Minotaur is moving towards the Robot
     else {
         Coord bestMove = minotaurPos;
         int minDist = INT_MAX;
@@ -128,11 +114,6 @@ void moveMinotaur(Maze& maze) {
     }
 }
 
-bool isAdjacentUpDownLeftRight(Coord a, Coord b) {
-    return ((a.first == b.first && abs(a.second - b.second) == 1) ||
-        (a.second == b.second && abs(a.first - b.first) == 1));
-}
-
 void printActivePowers(Maze& maze) {
     std::cout << "\nActive Powers: ";
     bool noneActive = true;
@@ -140,21 +121,26 @@ void printActivePowers(Maze& maze) {
         std::cout << "[Fog (" << maze.getFogTimer() << " moves left)] ";
         noneActive = false;
     }
-    if (maze.getSword() && !maze.getSwordUsed()) {
-        std::cout << "[Sword] ";
+
+    if (maze.getSword()) {
+        std::cout << "[Sword (" << maze.getSwordTimer() << " moves left)] ";
         noneActive = false;
     }
-    if (maze.getShield() && !maze.getShieldUsed()) {
-        std::cout << "[" << maze.getShieldUsesLeft() << "x Shield] ";
+
+    if (maze.getShield()) {
+        std::cout << "[Shield (" << maze.getShieldTimer() << " moves left)] ";
         noneActive = false;
     }
-    if (maze.getHammer() && !maze.getHammerUsed()) {
-        std::cout << "[" << maze.getHammerUsesLeft() << "x Hammer] ";
+
+    if (maze.getHammer()) {
+        std::cout << "[Hammer (" << maze.getHammerTimer() << " moves left)] ";
         noneActive = false;
     }
+
     if (noneActive) {
         std::cout << "None";
     }
+
     std::cout << "\n";
 }
 
@@ -177,6 +163,7 @@ bool gameLoop(Maze& maze) {
             continue;
         }
 
+        // Controling area, based on the input we get movement of the character R (Robot Robert)
         if (c == 'w' || c == 'a' || c == 's' || c == 'd') {
             Coord oldRobotPos = maze.getRobotPos();
 
@@ -193,94 +180,102 @@ bool gameLoop(Maze& maze) {
 
                 if (maze.getCharAt(nextRobotPos) == 'P') {
                     char effect = maze.getEffectAt(nextRobotPos);
-                    if (effect == 'F') {
-                        maze.setFogActive(true);
-                        int timer = maze.getFogTimer();
-                        timer += 5;
-                        maze.setFogTimer(timer);
-                        std::cout << "\nEffect Activated: Fog - Vision reduced for" << timer << " moves.\n";
-                    }
-                    else if (effect == 'S' && !maze.getSword()) {
+
+                    // Figuring out which magic object is Robot Robert taking
+                    switch(effect) {
+                    case 'F': {
+                            maze.setFogActive(true);
+                            int forTimer = maze.getFogTimer();
+                            forTimer += 4;
+                            maze.setFogTimer(forTimer);
+                            std::cout << "\nEffect Activated: Fog - Vision reduced for" << forTimer - 1 << " moves.\n";
+                        }
+                    case 'S': {
                         maze.setSword(true);
-                        std::cout << "\nEffect Activated: Sword - You can kill the Minotaur.\n";
+                        int swordTimer = maze.getSwordTimer();
+                        swordTimer += 4;
+                        maze.setSwordTimer(swordTimer);
+                        std::cout << "\nEffect Activated: Sword - You can kill the Minotaur for " << swordTimer - 1 << " moves.\n";
                     }
-                    else if (effect == 'H') {
+                    case 'H': {
                         maze.setShield(true);
-                        int usesShield = maze.getShieldUsesLeft();
-                        usesShield++;
-                        maze.setShieldUsesLeft(usesShield);
-                        std::cout << "\nEffect Activated: Shield - You are protected (" << usesShield << " uses).\n";
+                        int shieldTimer = maze.getShieldTimer();
+                        shieldTimer += 4;
+                        maze.setShieldTimer(shieldTimer);
+                        std::cout << "\nEffect Activated: Shield - You are safe from Minotaur for " << shieldTimer - 1 << " moves.\n";
                     }
-                    else if (effect == 'B') {
+                    case 'B': {
                         maze.setHammer(true);
-                        int uses = maze.getHammerUsesLeft();
-                        uses++;
-                        maze.setHammerUsesLeft(uses);
-                        std::cout << "\nEffect Activated: Hammer - You can break " << uses << " wall.\n";
+                        int hammerTimer = maze.getHammerTimer();
+                        hammerTimer += 4;
+                        maze.setHammerTimer(hammerTimer);
+                        std::cout << "\nEffect Activated: Hammer - You can break one wall for " << hammerTimer - 1 << " moves.\n";
+                    }
                     }
                     maze.erasePowerUpAt(nextRobotPos);
                 }
             }
             else {
+                // Seeing if Robot Robert can break the wall in front him
                 Coord hammerTarget = nextRobotPos;
-                if (maze.getHammer() && maze.getHammerUsesLeft() > 0 && maze.getCharAt(hammerTarget) == '#') {
+                if (maze.getHammer() && maze.getCharAt(hammerTarget) == '#' && maze.inBounds(nextRobotPos)) {
                     maze.breakWallAt(hammerTarget);
-                    maze.decrementHammerUses();
-                    std::cout << "\nYou smashed a wall with the hammer! Remaining uses: " << maze.getHammerUsesLeft() << "\n";
-
-                    if (maze.getHammerUsesLeft() == 0) {
-                        maze.setHammer(false);
-                        std::cout << "Hammer is now used up.\n";
-                    }
+                    std::cout << "\nYou smashed a wall with the hammer! Hammer is now used up.\n";
+                    maze.setHammer(false);
+                    maze.setHammerTimer(0);
+                }
+                else if (nextRobotPos != maze.getMinotaurPos()) {
+                    std::cout << "\nYou hit the wall! Cannot move there.\n";
+                    continue;
                 }
                 else {
-                    std::cout << "\nYou hit a wall, cannot move there.\n";
+                    std::cout << "\nDon't touch the beast when it's sleeping. It's better for you to RUN!\n";
                     continue;
                 }
             }
 
             if (maze.getRobotPos() == maze.getExitAbove()) {
-                std::cout << "\nYou reached the exit and escaped! Congratulations!\n";
                 maze.setGameWon(true);
                 maze.setGameOver(true);
                 maze.printMaze();
                 return true;
             }
+            
+            if (maze.getMinotaurAlive()) {
+                moveMinotaur(maze);
 
-            moveMinotaur(maze);
+                Coord robotPos = maze.getRobotPos();
+                Coord minotaurPos = maze.getMinotaurPos();
 
-            Coord robotPos = maze.getRobotPos();
-            Coord minotaurPos = maze.getMinotaurPos();
-
-            if (minotaurPos != Coord{ -1, -1 } && isAdjacentUpDownLeftRight(robotPos, minotaurPos)) {
-                if (maze.getSword() && !maze.getSwordUsed()) {
-                    std::cout << "\nYou killed the Minotaur with your sword!\n";
-                    maze.setMinotaurPos({ -1, -1 });
-                    maze.setSwordUsed(true);
-                }
-                else if (maze.getShieldUsesLeft() > 0) {
-                    std::cout << "\nShield blocked the Minotaur's attack! Minotaur is stunned for 3 turns.\n";
-                    int shieldUses = maze.getShieldUsesLeft();
-                    shieldUses--;
-                    maze.setShieldUsesLeft(shieldUses);
-                    maze.setMinotaurStunTimer(3);
-
-                    if (shieldUses == 0) {
-                        maze.setShield(false);
-                        std::cout << "Your shield is now depleted.\n";
+                if (maze.getMinotaurStunTimer() == 0) {
+                    if (minotaurPos != Coord{ -1, -1 } && maze.isAdjacentUpDownLeftRight(robotPos, minotaurPos)) {
+                        if (maze.getSword()) {
+                            std::cout << "\nYou killed the Minotaur with your sword!\n";
+                            maze.setSwordTimer(0);
+                            maze.setMinotaurAlive(false);
+                            maze.setMinotaurPos({ -1, -1 });
+                            maze.setSword(false);
+                        }
+                        else if (maze.getShield()) {
+                            std::cout << "\nShield blocked the Minotaur's attack! Minotaur is stunned for 3 turns.\n";
+                            maze.setShieldTimer(0);
+                            maze.setMinotaurStunTimer(3);
+                            maze.setShield(false);
+                        }
+                        else {
+                            maze.setGameOver(true);
+                            maze.setGameWon(false);
+                            maze.setMinotaurPos(robotPos);
+                            maze.setRobotPos({ -1, -1 });
+                            maze.setFogActive(false);
+                            maze.printMaze();
+                            return false;
+                        }
                     }
-                }
-                else {
-                    std::cout << "\nThe Minotaur caught you! Game Over.\n";
-                    maze.setGameOver(true);
-                    maze.setGameWon(false);
-                    maze.setRobotPos({ -1, -1 });
-                    maze.setMinotaurPos(robotPos);
-                    maze.printMaze();
-                    return false;
                 }
             }
 
+            // Checking the status of the magic objects and lovering down the timer
             if (maze.getFogActive()) {
                 int fogTimer = maze.getFogTimer();
                 fogTimer--;
@@ -288,6 +283,33 @@ bool gameLoop(Maze& maze) {
                 if (fogTimer <= 0) {
                     maze.setFogActive(false);
                     std::cout << "\nFog effect has worn off.\n";
+                }
+            }
+            if (maze.getSword()) {
+                int swordTimer = maze.getSwordTimer();
+                swordTimer--;
+                maze.setSwordTimer(swordTimer);
+                if (swordTimer <= 0) {
+                    maze.setSword(false);
+                    std::cout << "\nSword effect has worn off.\n";
+                }
+            }
+            if (maze.getShield()) {
+                int shieldTimer = maze.getShieldTimer();
+                shieldTimer--;
+                maze.setShieldTimer(shieldTimer);
+                if (shieldTimer <= 0) {
+                    maze.setShield(false);
+                    std::cout << "\nShield effect has worn off.\n";
+                }
+            }
+            if (maze.getHammer()) {
+                int hammerTimer = maze.getHammerTimer();
+                hammerTimer--;
+                maze.setHammerTimer(hammerTimer);
+                if (hammerTimer <= 0) {
+                    maze.setHammer(false);
+                    std::cout << "\nHammer effect has worn off.\n";
                 }
             }
         }

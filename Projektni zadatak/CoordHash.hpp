@@ -1,3 +1,7 @@
+﻿// Project: Maze Problem solving in c++
+// Name of an author: Nikolić Dalibor SV13-2023
+// Date and time of the last changes: 23.06.2025. 18:47
+
 #ifndef COORD_HASH_HPP
 #define COORD_HASH_HPP
 
@@ -6,6 +10,7 @@
 
 using Coord = std::pair<int, int>;
 
+// Global initialization of the struct Coord that represents coordinates in the maze
 namespace std {
     template<>
     struct hash<Coord> {

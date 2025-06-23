@@ -1,4 +1,9 @@
-﻿#include <iostream>
+﻿// *** Project: Maze Problem solving in c++ ***
+// Name of an author: Nikolić Dalibor SV13-2023
+// Name of the class assistant: Dušan Kenjić
+// Date and time of the last changes: 23.06.2025. 18:47
+
+#include <iostream>
 #include <sstream>
 #include <string>
 #include "Display.hpp"
@@ -11,7 +16,6 @@ int main() {
     int width = 80;
     int padding = (width - static_cast<int>(welcome.size())) / 2;
     std::cout << std::string(padding, ' ') << welcome << std::endl;
-
     std::cout << "\nYour mission is clear but perilous:\n"
         "Conquer the fearsome Minotaur and escape the labyrinthine maze.\n"
         "Every step matters, explore-cautiously, unravel ancient puzzles,\n"
@@ -35,7 +39,6 @@ int main() {
             revealAllPowerUps();
         }
         else if (choice == 'f') {
-
             // ENTERING DATA
             std::cout << "\nBefore your journey begins, brave explorer,\n"
                 "we require some vital information to shape your destiny.\n"
@@ -43,7 +46,6 @@ int main() {
 
             std::string line;
             int row, col;
-
             while (true) {
                 std::cout << "Dimension of the maze (row,col) with min(15,15): ";
                 std::getline(std::cin, line);
@@ -99,6 +101,8 @@ int main() {
                     std::cout << "Minimal number of magic objects is 4!" << std::endl;
                 };
             }
+
+            // Starting the main loop and beginning of the maze generation
             Maze maze(row, col, obj);
             gameLoop(maze);
         }
