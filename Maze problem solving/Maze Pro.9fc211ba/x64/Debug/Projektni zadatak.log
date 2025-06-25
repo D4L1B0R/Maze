@@ -1,11 +1,14 @@
 ﻿  Dynamic.cpp
   Maze.cpp
-C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(442,63): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
-C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(442,63): warning C4267:         with
-C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(442,63): warning C4267:         [
-C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(442,63): warning C4267:             _Ty=int
-C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(442,63): warning C4267:         ]
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(464,63): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(464,63): warning C4267:         with
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(464,63): warning C4267:         [
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(464,63): warning C4267:             _Ty=int
+C:\Users\dalen\source\repos\Projektni zadatak\Maze.cpp(464,63): warning C4267:         ]
+  main.cpp
+  Minotaur.hpp
   Sector.cpp
+  Sector.hpp
   Generating Code...
 Maze Pro.9fc211ba\x64\Debug\Sector.obj : warning LNK4042: object specified more than once; extras ignored
   Projektni zadatak.vcxproj -> C:\Users\dalen\source\repos\Projektni zadatak\x64\Debug\Maze Problem Solving.exe

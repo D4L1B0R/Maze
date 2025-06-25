@@ -181,36 +181,37 @@ bool gameLoop(Maze& maze) {
                 if (maze.getCharAt(nextRobotPos) == 'P') {
                     char effect = maze.getEffectAt(nextRobotPos);
 
+                    int forTimer = maze.getFogTimer();
+                    int swordTimer = maze.getSwordTimer();
+                    int shieldTimer = maze.getShieldTimer();
+                    int hammerTimer = maze.getHammerTimer();
+
                     // Figuring out which magic object is Robot Robert taking
                     switch(effect) {
-                    case 'F': {
+                        case 'F':
                             maze.setFogActive(true);
-                            int forTimer = maze.getFogTimer();
                             forTimer += 4;
                             maze.setFogTimer(forTimer);
-                            std::cout << "\nEffect Activated: Fog - Vision reduced for" << forTimer - 1 << " moves.\n";
-                        }
-                    case 'S': {
-                        maze.setSword(true);
-                        int swordTimer = maze.getSwordTimer();
-                        swordTimer += 4;
-                        maze.setSwordTimer(swordTimer);
-                        std::cout << "\nEffect Activated: Sword - You can kill the Minotaur for " << swordTimer - 1 << " moves.\n";
-                    }
-                    case 'H': {
-                        maze.setShield(true);
-                        int shieldTimer = maze.getShieldTimer();
-                        shieldTimer += 4;
-                        maze.setShieldTimer(shieldTimer);
-                        std::cout << "\nEffect Activated: Shield - You are safe from Minotaur for " << shieldTimer - 1 << " moves.\n";
-                    }
-                    case 'B': {
-                        maze.setHammer(true);
-                        int hammerTimer = maze.getHammerTimer();
-                        hammerTimer += 4;
-                        maze.setHammerTimer(hammerTimer);
-                        std::cout << "\nEffect Activated: Hammer - You can break one wall for " << hammerTimer - 1 << " moves.\n";
-                    }
+                            std::cout << "\nEffect Activated: Fog - Vision reduced for " << forTimer - 1 << " moves.\n";
+                            break;
+                        case 'S':
+                            maze.setSword(true);
+                            swordTimer += 4;
+                            maze.setSwordTimer(swordTimer);
+                            std::cout << "\nEffect Activated: Sword - You can kill the Minotaur for " << swordTimer - 1 << " moves.\n";
+                            break;
+                        case 'H':
+                            maze.setShield(true);
+                            shieldTimer += 4;
+                            maze.setShieldTimer(shieldTimer);
+                            std::cout << "\nEffect Activated: Shield - You are safe from Minotaur for " << shieldTimer - 1 << " moves.\n";
+                            break;
+                        case 'B':
+                            maze.setHammer(true);
+                            hammerTimer += 4;
+                            maze.setHammerTimer(hammerTimer);
+                            std::cout << "\nEffect Activated: Hammer - You can break one wall for " << hammerTimer - 1 << " moves.\n";
+                            break;
                     }
                     maze.erasePowerUpAt(nextRobotPos);
                 }
